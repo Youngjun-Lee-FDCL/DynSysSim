@@ -12,6 +12,7 @@ classdef DynSystems < handle
         subSysCell
         subSysNum = 0
         subSysSize 
+        subSysIdxes
         isLogOn = false
         logData = false
         holder
@@ -25,7 +26,7 @@ classdef DynSystems < handle
             assert(or(iscell(in), isnumeric(in)), 'invalid input');
             if iscell(in)              
                 obj.subSysCell = in;
-                obj.subSysNum = numel(in);   
+                obj.subSysNum = numel(in);  
                 startIdx = 1;
                 for i = 1:obj.subSysNum
                     stSize = in{i}.stateSize;
@@ -47,20 +48,20 @@ classdef DynSystems < handle
                 error("Create the 'dynEqns' method in the "+obj.name+" dynamical system")
             end
             out = nan(sum(obj.subSysSize), 1);
-            idx = 1;
+            startIdx = 1;
             for i = 1:obj.subSysNum
                 subsys = obj.subSysCell{i};
                 s = subsys.state;
                 stSize = subsys.stateSize;
                 if obj.logData == true
                     subsys.logData = true;
-                    out(idx:idx+stSize-1) = subsys.dynEqns(t, s, u{i});
+                    out(startIdx:startIdx + stSize-1) = subsys.dynEqns(t, s, u{i});
                     obj.data.(subsys.name) = subsys.data;
                     subsys.logData = false;
                 else
-                    out(idx:idx+stSize-1) = subsys.dynEqns(t, s, u{i});
+                    out(startIdx:startIdx + stSize-1) = subsys.dynEqns(t, s, u{i});
                 end
-                idx = idx + stSize;
+                startIdx = startIdx + stSize;
             end
         end
 
@@ -100,7 +101,7 @@ classdef DynSystems < handle
             end
         end
 
-        function [varargout]= getSubStates(obj)
+        function [varargout] = getSubStates(obj)
             varargout = cell(obj.subSysNum, 1);
             for i = 1:obj.subSysNum
                 varargout{i} = obj.subSysCell{i}.state;
@@ -137,139 +138,15 @@ classdef DynSystems < handle
             obj.data = [];
         end
 
-%                
-%         function updateStateAndTime(obj, state, t)
-%             startIdx = 1;
-%             for i = 1: obj.subSysNum
-%                 sysSize = obj.subSysSize(i);
-%                 obj.subSysCell{i}.updateStateAndTime(state(startIdx:startIdx + sysSize - 1), t);
-%                 startIdx = startIdx + sysSize;
-%             end            
-%             obj.state = state;
-%             obj.time = t;
-%         end
-%         
-%         function updateStateDerivAndTime(obj, state, stateDot, t)
-%             startIdx = 1;
-%             for i = 1: obj.subSysNum
-%                 sysSize = obj.subSysSize(i);
-%                 st = state(startIdx:startIdx + sysSize - 1);
-%                 stDot =  stateDot(startIdx:startIdx + sysSize - 1);
-%                 obj.subSysCell{i}.updateStateDerivAndTime(st, stDot, t);
-%                 startIdx = startIdx + sysSize;
-%             end            
-%             obj.state = state;
-%             obj.stateDeriv = stateDot;
-%             obj.time = t;
-%         end
-%         
-%         function updateStateDeriv(obj, stateDot)
-%             startIdx = 1;
-%             for i = 1: obj.subSysNum
-%                 sysSize = obj.subSysSize(i);
-%                 obj.subSysCell{i}.updateStateDeriv(stateDot(startIdx:startIdx + sysSize - 1));
-%                 startIdx = startIdx + sysSize;
-%             end
-%             obj.stateDeriv = stateDot;
-%         end        
-%         
-        
-        
-%         function preallocateAll(obj, dt, tf)
-%             if obj.isLogOn 
-%                 obj.preallocate(dt, tf);
-%             end
-%             for i = 1:obj.subSysNum
-%                 obj.subSysCell{i}.preallocateAll(dt, tf);   
-%             end
-%         end
-        
-%         function preallocate(obj, dt, tf)
-%         end
-        
-%         function logSwitches = loggerSwitchOn(obj, logSwitches)
-%             if ~isscalar(logSwitches)
-%                 logSwitch = logSwitches(1);
-%                 logSwitches(1) = [];
-%             else
-%                 logSwitch = logSwitches;
-%             end
-%             if obj.subSysNum > 1
-%                 for i = 1:obj.subSysNum
-%                     logSwitches = obj.subSysCell{i}.loggerSwitchOn(logSwitches);
-%                 end
-%             end
-%             obj.isLogOn = logSwitch;                               
-%         end
-        
-%         function updateIndex(obj, index)
-%             if obj.isLogOn == true
-%                 for i = 1:obj.subSysNum                    
-%                     subSysLog = obj.subSysCell{i}.log;
-%                     if isempty(subSysLog)
-%                         continue
-%                     end
-%                     obj.subSysCell{i}.log = DataInventory.updateIdx(subSysLog, index);
-%                 end
-%                 obj.log = DataInventory.updateIdx(obj.log, index);
-%             end
-%         end
-% %             
-%         function updateFromStates(obj)
-%             obj.updateFromState;
-%             for i = 1:obj.subSysNum
-%                 subSys = obj.subSysCell{i};
-%                 subSys.updateFromStates;
-%             end
-%         end
-%         
-%         function updateFromState(obj)
-%         end
-%         
-%         function updateFromStateDerivs(obj)
-%             obj.updateFromStateDeriv;
-%             for i = 1:obj.subSysNum
-%                 subSys = obj.subSysCell{i};
-%                 subSys.updateFromStateDeriv;
-%             end
-%         end
-%         
-%         function updateFromStateDeriv(obj)
-%         end
-%         
-%         function out = stopCondSatisfied(obj)
-%             out = false;
-%         end
-%         
-%         function [fieldCellArr, valueCellArr, numCellArr] = mergeLog(obj)   
-%             if isempty(obj.log)
-%                 fieldCellArr = [];
-%                 valueCellArr = [];
-%                 numCellArr = 0;              
-%             else
-%                 obj.postProcessing();
-%                 fieldCellArr = {obj.name};
-%                 valueCellArr = {obj.log};
-%                 numCellArr = 1;            
-%             end
-%             for i = 1: obj.subSysNum              
-%                 subSys = obj.subSysCell{i};                
-%                 [fca, vca, nca] = subSys.mergeLog;
-%                 fieldCellArr = [fieldCellArr; fca];
-%                 valueCellArr = [valueCellArr; vca];
-%                 numCellArr = numCellArr + nca;
-%             end              
-%         end
-        
-%         function out = logData(obj, t)
-%             if isempty(obj.timer)
-%                 out = false;
-%                 return
-%             end
-%             obj.timer.update(t);
-%             out = and(obj.isLogOn, obj.timer.updateFlag);
-%         end
-    
+        function [varargout] = splitStates(obj, state)
+            stSizes = obj.subSysSize;
+            varargout = cell(obj.subSysNum, 1);
+            startIdx = 1;
+            for i = 1:obj.subSysNum
+                varargout{i} = state(startIdx:startIdx + stSizes(i) -1);
+                startIdx = startIdx  + stSizes(i);
+            end
+        end
 
     end
 end
