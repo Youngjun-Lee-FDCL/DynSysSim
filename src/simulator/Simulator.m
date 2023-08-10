@@ -39,14 +39,15 @@ classdef Simulator < handle
             tic
             for i = 1:numiter
                 t = obj.system.time();
-                s_next = obj.system.step(u(t), dt);
+                s = obj.system.state();
+                s_next = obj.system.step(t, s, u(t), dt);
                 t_next = round(t + dt ,6);  
                 obj.stackdata();
                 obj.system.updateState(s_next);
                 obj.system.updateTimes(t_next);
             end
             t = obj.system.time();
-            obj.system.step(u(t), dt);
+            obj.system.step(t, s_next, u(t), dt);
             obj.stackdata();
             obj.elapsedTime = toc;                    
             if obj.INIT 
