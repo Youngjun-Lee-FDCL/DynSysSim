@@ -65,22 +65,18 @@ classdef DynSystems < handle
             end
         end
 
-        function s_next = step(obj, u, dt)
+        function s_next = step(obj, t, s, u, dt)
             obj.holder = [];
-            t = obj.time;
-            s = obj.state;
+            %t = obj.time;
+            %s = obj.state;
             f = obj.setODEfun(u);
             
-            if obj.isLogOn
-                obj.logData = true;
-                k1 = f(t, s) * dt;
-                obj.logData = false;
-            else
-                k1 = f(t, s) * dt;
-            end
+            obj.switchLogData(true);
+            k1 = f(t, s) * dt;
+            obj.switchLogData(false);
             k2 = f(t + dt/2, s + k1/2) * dt;
             k3 = f(t + dt/2, s + k2/2) * dt;
-            k4 = f(t + dt/2, s + k3/2) * dt;
+            k4 = f(t + dt, s + k3) * dt;
             s_next = s + 1/6 * (k1 + 2*k2 + 2*k3 + k4);
         end
 
@@ -148,5 +144,16 @@ classdef DynSystems < handle
             end
         end
 
+        function switchLogData(obj, bool)
+            if obj.isLogOn == true
+                obj.logData = bool;
+                for i = 1:obj.subSysNum
+                    subsys = obj.subSysCell{i};
+                    if subsys.isLogOn == true
+                        subsys.logData = bool;
+                    end
+                end
+            end
+        end
     end
 end
