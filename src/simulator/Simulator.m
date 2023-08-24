@@ -26,7 +26,7 @@ classdef Simulator < handle
             obj.logHist = logHist;
         end
 
-        function obj = propagate(obj, dt, tf, u)
+        function obj = propagate(obj, tspan, u)
             if isempty(obj.system.state)
                 error('state should be initialized before calling propagate method');
             end
@@ -34,8 +34,10 @@ classdef Simulator < handle
                u = @(t) u; 
             end
 
-            numiter = round(tf/dt);         
-            obj.tspan = 0:dt:tf;
+            obj.tspan = round(tspan, 6);
+            numiter = length(tspan);
+            dt = tspan(2) - tspan(1);
+            obj.system.updateTimes(tspan(1));
             tic
             for i = 1:numiter
                 t = obj.system.time();
@@ -46,9 +48,6 @@ classdef Simulator < handle
                 obj.system.updateState(s_next);
                 obj.system.updateTimes(t_next);
             end
-            t = obj.system.time();
-            obj.system.step(t, s_next, u(t), dt);
-            obj.stackdata();
             obj.elapsedTime = toc;                    
             if obj.INIT 
                 obj.INIT = false;

@@ -150,7 +150,7 @@ classdef DynSystems < handle
                 for i = 1:obj.subSysNum
                     subsys = obj.subSysCell{i};
                     if subsys.isLogOn == true
-                        subsys.logData = bool;
+                        subsys.switchLogData(bool);
                     end
                 end
             end
