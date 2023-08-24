@@ -174,8 +174,6 @@ classdef DataInventory < handle
         function postProcessData(obj)
             len = obj.lastAppenedIdx;
             obj.data(len+1:end, :) = [];
-            var = obj.startVal:obj.interval:obj.interval*(len-1);
-            obj.indepVar = var(:);            
         end
     end
     
