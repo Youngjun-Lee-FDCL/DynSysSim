@@ -41,11 +41,13 @@ classdef NonlinearSecondOrderSystem < SecondOrderSystem
             s0 = [0;0];
             logOn = true;
             sys = NonlinearSecondOrderSystem('sys', s0, logOn).setParams(xi, omega, xLim, xDotLim);   
+            t0 = 0;
             dt = 0.0005;
             tf = 2;
+            tspan = t0:dt:tf;
             input = @(t) stepCmd(t, 0, deg2rad(10));
 
-            sim = Simulator(sys).propagate(dt, tf, input);
+            sim = Simulator(sys).propagate(tspan, input);
             sim.report();
             log = sim.log;
 
