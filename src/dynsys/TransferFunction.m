@@ -55,16 +55,18 @@ classdef TransferFunction < DynSystems
             addpath("../datalogger/")
 
             % case 1 : first order lag system
-            tau = 0.1;
+            tau = 0.01;
             order = 1;
             denominator = [tau 1];
             numerator = 1;
             logOn = true;
             sys = TransferFunction('firstOrderSys', 0, logOn).setParams(order, denominator, numerator);
+            t0 = 0;
             dt = 0.0025;
-            tf = 5;
+            tf = 1;
+            tspan = t0:dt:tf;
             input = @(t) stepCmd(t, 0, 1);
-            sim1 = Simulator(sys).propagate(dt, tf, input);
+            sim1 = Simulator(sys).propagate(tspan, input);
             log = sim1.log;
 
             log.state.subplots(1, 'First order system state history');
@@ -73,23 +75,22 @@ classdef TransferFunction < DynSystems
 
             % case 2: second order system
             xi = 0.7;
-            omega = 50; %[rad/s]
+            omega = 150; %[rad/s]
             order = 2;
             denominator = [1 2*xi*omega omega^2];
             numerator = omega^2;
             sys = TransferFunction('secondOrderSys', [0;0], logOn).setParams(order, denominator, numerator);
-            dt = 0.0025;
-            tf = 5;
+            tspan = t0:dt:tf;
             input = @(t) [stepCmd(t, 0, 1); 0];
-            sim2 = Simulator(sys).propagate(dt, tf, input);
+            sim2 = Simulator(sys).propagate(tspan, input);
             log = sim2.log;
             
-            log.state.subplots(3, 'second order system state history');
+            log.state.subplots(1, 'second order system state history', 1);
             log.stateDot.subplots(4, 'second order system state derivative history');
             
             % case 3: second order system with zero                        
             sys = TransferFunction('secondOrderSysWithZero', [0;0], logOn).setParams(order, [0.009 0.33 1], [-0.0363 1]);            
-            sim3 = Simulator(sys).propagate(dt, tf, input);
+            sim3 = Simulator(sys).propagate(tspan, input);
             log = sim3.log;
             
             log.state.subplots(5, 'second order system with zero state history');

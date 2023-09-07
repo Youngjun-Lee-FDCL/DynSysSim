@@ -67,11 +67,13 @@ classdef SecondOrderSystem < DynSystems
             xDotLim = deg2rad(500); % [rad/s]
             logOn = true;
             sys = SecondOrderSystem('sys', [0;0], logOn).setParams(xi, omega, xLim, xDotLim);
+            t0 = 0;
             dt = 0.0025;
             tf = 2;
+            tspan = t0:dt:tf;
             input = @(t) stepCmd(t, [0,0.5,1], deg2rad([5,-5,5]));
             
-            sim = Simulator(sys).propagate(dt, tf, input);
+            sim = Simulator(sys).propagate(tspan, input);
             sim.report();
             log = sim.log;
 

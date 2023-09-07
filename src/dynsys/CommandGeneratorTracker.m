@@ -37,9 +37,11 @@ classdef CommandGeneratorTracker < DynSystems
             B = [0; 0];
             logOn = true;
             sys = CommandGeneratorTracker("test", x0, logOn).setParams(A, B);
+            t0 = 0;
             dt = 0.01;
             tf = 10.0;
-            sim = Simulator(sys).propagate(dt, tf, @(t) 0.0);
+            tspan = t0:dt:tf;
+            sim = Simulator(sys).propagate(tspan, @(t) 0.0);
             sim.report();
             log = sim.log;
 
