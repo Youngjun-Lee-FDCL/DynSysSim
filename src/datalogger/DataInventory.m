@@ -33,6 +33,7 @@ classdef DataInventory < handle
                 obj.indepVar = indepVarSpan;
                 str.(fieldNames{1}) = obj;
             else                
+                assert(length(fieldNames)==length(dataNames), "fieldnams does not match with dataName: Check dataNames properties")
                 objs = cell(1, numFieldNames);
                 for i = 1:numFieldNames
                     objs{i} = DataInventory(fieldNames(i), dataNames{i}, indepVarSpan);
