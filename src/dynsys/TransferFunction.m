@@ -62,8 +62,8 @@ classdef TransferFunction < DynSystems
             logOn = true;
             sys = TransferFunction('firstOrderSys', 0, logOn).setParams(order, denominator, numerator);
             t0 = 0;
-            dt = 0.0025;
-            tf = 1;
+            dt = 0.01;
+            tf = 0.1;
             tspan = t0:dt:tf;
             input = @(t) stepCmd(t, 0, 1);
             sim1 = Simulator(sys).propagate(tspan, input);
@@ -85,16 +85,17 @@ classdef TransferFunction < DynSystems
             sim2 = Simulator(sys).propagate(tspan, input);
             log = sim2.log;
             
-            log.state.subplots(1, 'second order system state history', 1);
-            log.stateDot.subplots(4, 'second order system state derivative history');
+            plt = log.state.subplots(1, 'Second order system state history', 1);
+            legend(["First", "Second"]);
+            log.stateDot.subplots(4, 'Second order system state derivative history');
             
             % case 3: second order system with zero                        
             sys = TransferFunction('secondOrderSysWithZero', [0;0], logOn).setParams(order, [0.009 0.33 1], [-0.0363 1]);            
             sim3 = Simulator(sys).propagate(tspan, input);
             log = sim3.log;
             
-            log.state.subplots(5, 'second order system with zero state history');
-            log.stateDot.subplots(6, 'second order system with zero state derivative history');
+            log.state.subplots(5, 'Second order system with zero state history');
+            log.stateDot.subplots(6, 'Second order system with zero state derivative history');
             
             rmpath("../simulator/")
             rmpath("../utils/")

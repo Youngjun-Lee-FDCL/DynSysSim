@@ -1,4 +1,4 @@
-classdef DataInventory < handle
+classdef DataInventory < matlab.mixin.Copyable
     properties
         fieldName
         dataName        
@@ -11,7 +11,7 @@ classdef DataInventory < handle
     
     properties (Hidden)
         interval
-        startVal
+        startval
     end
     methods
         function [obj, str] = DataInventory(fieldNames, dataNames, indepVarSpan)           
@@ -25,7 +25,7 @@ classdef DataInventory < handle
             if numFieldNames == 1
                 obj.fieldName = fieldNames;
                 obj.dataLen = numel(indepVarSpan);
-                obj.startVal = indepVarSpan(1);
+                obj.startval = indepVarSpan(1);
                 obj.interval = diff(indepVarSpan(1:2));
                 obj.dataNum = length(dataNames);
                 obj.dataName = dataNames;
@@ -170,6 +170,10 @@ classdef DataInventory < handle
             str.indepVar = obj.indepVar;
             str.data = obj.data;
             str.dataNum = obj.dataNum;
+            str.dataLen = obj.dataLen;
+            str.lastAppenedIdx = obj.lastAppenedIdx;
+            str.interval = obj.interval;
+            str.startval = obj.startval;
         end
         
         function postProcessData(obj)
@@ -216,7 +220,7 @@ classdef DataInventory < handle
             fieldNames = fieldnames(datastr);
             for i = 1:length(fieldNames)
                 object = datastr.(fieldNames{i});
-                dataStr = object.saveobj;
+                dataStr = object.saveobj();
                 str.(fieldNames{i}) =  dataStr;
             end            
         end
@@ -229,7 +233,11 @@ classdef DataInventory < handle
                 strs.(fieldName).dataName = str.(fieldName).dataName;
                 strs.(fieldName).indepVar = str.(fieldName).indepVar;
                 strs.(fieldName).data = str.(fieldName).data;
-                strs.(fieldName).dataNum = str.(fieldName).dataLen;
+                strs.(fieldName).dataNum = str.(fieldName).dataNum;
+                strs.(fieldName).dataLen = str.(fieldName).dataLen;
+                strs.(fieldName).lastAppenedIdx = str.(fieldName).lastAppenedIdx;
+                strs.(fieldName).interval = str.(fieldName).interval;
+                strs.(fieldName).startval = str.(fieldName).startval;
             end
         end
         function objs = str2obj(str)
@@ -238,10 +246,15 @@ classdef DataInventory < handle
             for i  = 1:nfield
                 fieldName = fieldNames{i};
                 objs.(fieldName) = DataInventory;
+                objs.(fieldName).fieldName = fieldName;
                 objs.(fieldName).dataName = str.(fieldName).dataName;
                 objs.(fieldName).indepVar = str.(fieldName).indepVar;
                 objs.(fieldName).data = str.(fieldName).data;
                 objs.(fieldName).dataNum = str.(fieldName).dataNum;
+                objs.(fieldName).dataLen = str.(fieldName).dataLen;
+                objs.(fieldName).lastAppenedIdx = str.(fieldName).lastAppenedIdx;
+                objs.(fieldName).interval = str.(fieldName).interval;
+                objs.(fieldName).startval = str.(fieldName).startval;
             end
             
         end   
