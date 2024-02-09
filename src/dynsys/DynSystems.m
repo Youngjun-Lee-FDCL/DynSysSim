@@ -67,8 +67,6 @@ classdef DynSystems < handle
 
         function s_next = step(obj, t, s, u, dt)
             obj.holder = [];
-            %t = obj.time;
-            %s = obj.state;
             f = obj.setODEfun(u);
             
             obj.switchLogData(true);

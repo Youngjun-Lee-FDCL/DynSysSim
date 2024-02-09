@@ -18,7 +18,7 @@ classdef NonlinearSecondOrderSystem < SecondOrderSystem
                      - 2 * obj.xi*obj.omega*obj.sat(x_dot, obj.xDotLim)...
                      + u * obj.omega^2;
             sDot = [x_dot; x_ddot];
-            if obj.checkLoggerOn(t)
+            if obj.logData
                 obj.data.state = s;
                 obj.data.stateDot = sDot;
                 obj.data.cmd = u;
