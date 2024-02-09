@@ -27,7 +27,7 @@ classdef DataInventory < matlab.mixin.Copyable
                 obj.dataLen = numel(indepVarSpan);
                 obj.startval = indepVarSpan(1);
                 obj.interval = diff(indepVarSpan(1:2));
-                obj.dataNum = length(dataNames);
+                obj.dataNum = length([dataNames{:}]);
                 obj.dataName = dataNames;
                 obj.data = nan(length(indepVarSpan), obj.dataNum);
                 obj.indepVar = indepVarSpan;
@@ -54,19 +54,34 @@ classdef DataInventory < matlab.mixin.Copyable
             end
         end
         
-        function p = subplots(obj, fignum, Title, idx)
+        function p = subplots(obj, fignum, Title, linestyle, color, idx)
             switch nargin
                 case 1
                     figure();
                     idx = 1:1:obj.dataNum;
+                    linestyle = "";
+                    color = "default";
                 case 2
                     figure(fignum);
                     idx = 1:1:obj.dataNum;
+                    linestyle = "";
+                    color = "default";
                 case 3
                     fig = figure(fignum);
                     fig.Name = Title;
                     idx = 1:1:obj.dataNum;
+                    linestyle = "";
+                    color = "default";
                 case 4
+                    fig = figure(fignum);
+                    fig.Name = Title;
+                    idx = 1:1:obj.dataNum;
+                    color = "default";
+                case 5
+                    fig = figure(fignum);
+                    fig.Name = Title;
+                    idx = 1:1:obj.dataNum;
+                case 6
                     fig = figure(fignum);
                     fig.Name = Title;
             end
@@ -81,7 +96,7 @@ classdef DataInventory < matlab.mixin.Copyable
                 if isempty(obj.dataName{k})
                     obj.dataName{k} = '';
                 end
-                p{i} = plot(obj.indepVar, obj.data(:, k),'DisplayName',obj.dataName{k});
+                p{i} = plot(obj.indepVar, obj.data(:, k),linestyle, color=color, DisplayName=obj.dataName{k});
                 ylabel(obj.dataName{k});
                 box on; grid on;
             end      
