@@ -85,7 +85,7 @@ classdef TransferFunction < DynSystems
             sim2 = Simulator(sys).propagate(tspan, input);
             log = sim2.log;
             
-            plt = log.state.subplots(1, 'Second order system state history', 1);
+            plt = log.state.subplots(1, 'Second order system state history',"","default",1);
             legend(["First", "Second"]);
             log.stateDot.subplots(4, 'Second order system state derivative history');
             
