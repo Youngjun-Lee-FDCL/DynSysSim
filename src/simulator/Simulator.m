@@ -37,11 +37,18 @@ classdef Simulator < matlab.mixin.Copyable
             if isnumeric(u)
                u = @(t) u; 
             end
-
+            
+            % set a timer of the simulator
             obj.tspan = round(tspan, 6);
             numiter = length(tspan);
             dt = tspan(2) - tspan(1);
             obj.system.updateTimes(tspan(1));
+
+            % check if the dynEqns method designed well
+            f = obj.system.setODEfun(u(tspan(1)));
+            dim_bools = size(f(obj.system.time, obj.system.state)) == size(obj.system.state);
+            assert(and(dim_bools(1), dim_bools(2)), "Check the input/output of your dynEqns method: the sizes of state and its derivative does not match")
+            
             tic
             for i = 1:numiter
                 t = obj.system.time();
@@ -98,9 +105,9 @@ classdef Simulator < matlab.mixin.Copyable
             data = obj.system.data;
             if isempty(obj.log) && ~isempty(data)
                 fnames = fieldnames(data);
-                fieldLength = length(fnames);
+                fieldCellLength = length(fnames);
                 [~, obj.log] = DataInventory(fnames, obj.system.dataNames, obj.tspan);
-                for i = 1:fieldLength
+                for i = 1:fieldCellLength
                     obj.log.(fnames{i}).append(data.(fnames{i}));
                 end
                 obj.fieldNames = fnames;
