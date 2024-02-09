@@ -8,9 +8,9 @@ classdef SecondOrderSystem < DynSystems
     end    
         
     methods
-        function obj = SecondOrderSystem(name, s0, logOn)            
-                obj = obj@DynSystems(name, s0, logOn);
-        end     
+        function obj = SecondOrderSystem(name, s0, logOn)
+            obj = obj@DynSystems(name, s0, logOn);
+        end
         
         function obj = setParams(obj, xi, omega, xLim, xDotLim)
             obj.xi = xi;
@@ -51,8 +51,6 @@ classdef SecondOrderSystem < DynSystems
         end
     end
 
-    
-    
     methods (Static)
         function test()
             % add path
