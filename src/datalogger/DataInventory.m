@@ -55,7 +55,7 @@ classdef DataInventory < matlab.mixin.Copyable
             end
         end
         
-        function [p, axes] = subplots(obj, fignum, Title, linestyle, color, idx, layout, arrange, axes)
+        function [ps, axes] = subplots(obj, fignum, Title, linestyle, color, idx, layout, arrange, axes)
             switch nargin
                 case 1
                     figure();
@@ -122,7 +122,7 @@ classdef DataInventory < matlab.mixin.Copyable
                     end
             end
             obj.postProcessData;
-            p = cell(length(idx) , 1); % preallocation
+            ps = cell(length(idx) , 1); % preallocation
             for i = 1:1:length(idx)
                 k = idx(i);
                 if isempty(obj.axes{i})
@@ -137,7 +137,7 @@ classdef DataInventory < matlab.mixin.Copyable
                     obj.dataName{k} = '';
                 end
                 ndata = size(obj.data, 1);
-                p{i} = plot(obj.indepVar(1:ndata), obj.data(:, k),linestyle, color=color, DisplayName=obj.dataName{k});
+                ps{i} = plot(obj.indepVar(1:ndata), obj.data(:, k),linestyle, color=color, DisplayName=obj.dataName{k});
                 ylabel(obj.dataName{k});
                 box on; grid on;
                 xlabel('Time [sec]');
@@ -145,71 +145,177 @@ classdef DataInventory < matlab.mixin.Copyable
             axes = obj.axes;
         end
         
-        function p = plot(obj, fignum, Title, idx)
-            switch nargin
-                case 1
-                    figure();
-                    idx = 1:1:obj.dataNum;
-                    Title = '';
-                case 2
-                    figure(fignum);
-                    Title = '';
-                    idx = 1:1:obj.dataNum;
-                case 3
+        function axes = subplot(obj, fignum, axes_or_idx_1, axes_or_idx_2, varargin)
+            default_axes = (obj.dataNum * 100 + 10 + 1):(obj.dataNum * 100 + 10 + obj.dataNum);
+            default_idx = 1:1:obj.dataNum;
+            if nargin == 1
+                figure('Color', 'white');
+                axes = default_axes;
+                idx = default_idx;
+            elseif nargin == 2
+                fig = figure(fignum);
+                fig.Color = 'white';
+                axes = (obj.dataNum * 100 + 10 + 1):(obj.dataNum * 100 + 10 + obj.dataNum);
+                idx = 1:1:obj.dataNum;
+            elseif nargin == 3
+                if isa(fignum, 'string')
+                    figure('Color', 'white');
+                    varargin = [{fignum}, {axes_or_idx_1}];
+                    axes = (obj.dataNum * 100 + 10 + 1):(obj.dataNum * 100 + 10 + obj.dataNum);
+                    idx = default_idx;
+                else
                     fig = figure(fignum);
-                    fig.Name = Title;
-                    idx = 1:1:obj.dataNum;
-                case 4
+                    fig.Color = 'white';
+                    if isa(axes_or_idx_1, 'matlab.graphics.axis.Axes')
+                        axes = axes_or_idx_1;
+                        idx = default_idx;
+                    else
+                        axes = default_axes;
+                        idx = axes_or_idx_1;
+                    end
+                    varargin = {};
+                end
+            elseif nargin == 4
+                fig = figure(fignum);
+                fig.Color = 'white';
+                if isa(axes_or_idx_1, 'string')
+                    varargin = [{axes_or_idx_1}, {axes_or_idx_2}, varargin(:)'];
+                    axes = default_axes;
+                    idx = default_idx;
+                elseif isa(axes_or_idx_1, 'matlab.graphics.axis.Axes')
+                    varargin = {};
+                    axes = axes_or_idx_1;
+                    idx = axes_or_idx_2;
+                else
+                    varargin = {};
+                    axes = axes_or_idx_2;
+                    idx = axes_or_idx_1;
+                end
+            elseif nargin == 5
+                if isa(fignum, 'string')
+                    figure('Color', 'white');
+                    varargin = [{fignum}, {axes_or_idx_1}];
+                    axes = default_idx;
+                    idx = default_idx;
+                else
                     fig = figure(fignum);
-                    fig.Name = Title;
+                    fig.Color = 'white';
+                    if isa(axes_or_idx_1, 'matlab.graphics.axis.Axes')
+                        axes = axes_or_idx_1;
+                        idx = default_idx;
+                    else
+                        axes = default_axes;
+                        idx = axes_or_idx_1;
+                    end
+                    varargin = [{axes_or_idx_2}, varargin(:)'];
+                end
+            elseif mod(nargin - 6, 2) ==0 && nargin >= 6
+                fig = figure(fignum);
+                fig.Color = 'white';
+                if isa(axes_or_idx_1, 'string')
+                    varargin = [{axes_or_idx_1}, {axes_or_idx_2}, varargin(:)'];
+                    axes = default_axes;
+                    idx = default_idx;
+                elseif isa(axes_or_idx_1, 'matlab.graphics.axis.Axes')
+                    axes = axes_or_idx_1;
+                    idx = axes_or_idx_2;
+                else
+                    axes = axes_or_idx_2;
+                    idx = axes_or_idx_1;
+                end
+            elseif mod(nargin - 6, 2) ==1 && nargin >= 7
+                if isa(fignum, 'string')
+                    figure('Color', 'white');
+                    varargin = [{fignum}, {axes_or_idx_1}, {axes_or_idx_2}, varargin(:)'];
+                    axes = default_idx;
+                    idx = default_idx;
+                else
+                    fig = figure(fignum);
+                    fig.Color = 'white';
+                    if isa(axes_or_idx_1, 'matlab.graphics.axis.Axes')
+                        axes = axes_or_idx_1;
+                        idx = default_idx;
+                    else
+                        idx = axes_or_idx_1;
+                        axes  = default_axes;
+                    end
+                    varargin = [{axes_or_idx_2}, varargin(:)'];
+                end
             end
+
+
+            obj.postProcessData;
+            nsubfig = length(idx);
+            for i = 1:1:nsubfig
+                k = idx(i);
+                axes(k) = subplot(axes(k)); hold on;
+                if isempty(obj.dataName{k})
+                    obj.dataName{k} = '';
+                end
+                ndata = size(obj.data, 1);
+                ps{i} = plot(obj.indepVar(1:ndata), obj.data(:, k), varargin{:});
+                ylabel(obj.dataName{k});
+                box on; grid on;
+                xlabel('Time [sec]');
+            end
+        end
+
+        function p = plot(obj, fignum, idx, varargin)
+            if nargin < 2
+                figure('Color', 'white');
+            elseif isa(fignum, 'double')
+                fig = figure(fignum);
+                fig.Color = "white";
+            else
+                figure(Color="white");
+                varargin = [{fignum}, {idx}, varargin(:)'];
+                idx = 1:1:obj.dataNum;
+            end
+            if nargin <= 3
+                idx = 1:1:obj.dataNum;
+            end
+            if mod(nargin-4, 2) == 0 && nargin >= 4
+                varargin = [{idx}, varargin(:)'];
+                idx = 1:1:obj.dataNum;
+            end
+
             obj.postProcessData;
             p = cell(length(idx) , 1); % preallocation
             hold on;
-            title(Title);
             xlabel('Time [sec]');box on; grid on;
             ylabel(obj.fieldName);
             ndata = size(obj.data, 1);
             for i = 1:length(idx)                
-                p{i} = plot(obj.indepVar(1:ndata), obj.data(:, idx(i)),'DisplayName', obj.dataName{idx(i)});
+                p{i} = plot(obj.indepVar(1:ndata), obj.data(:, idx(i)),'DisplayName', obj.dataName{idx(i)}, varargin{:});
             end           
         end
-        
-        function plot2(obj, fignum, i, j)
+     
+        function p = plot3(obj, fignum, order, varargin)
             if nargin < 2
                 figure('Color', 'white');
-            else
+            elseif isa(fignum, 'double')
                 fig = figure(fignum);
-                fig.Color = 'white';
+                fig.Color = "white";
+            else
+                figure(Color="white");
+                varargin = [{fignum}, {order}, varargin(:)'];
+                order = [1,2,3];
             end
             if nargin < 3
-                i = 1;
-                j = 2;
+                order = [1, 2, 3];
+            end
+            if nargin == 3
+                order = [1, 2, 3];
+            end
+            if mod(nargin-4, 2) == 0 && nargin >= 4
+                varargin = [{order}, varargin(:)'];
+                order = [1, 2, 3];
             end
             obj.postProcessData;
-            plot(obj.data(:,i), obj.data(:,j))
-            xlabel(obj.dataName{i});
-            ylabel(obj.dataName{j});
-            grid on; box on; 
-        end
-        
-        function plot3(obj, fignum, i, j, k)
-            if nargin < 2
-                figure('Color', 'white');
-            else
-                fig = figure(fignum);
-                fig.Color = 'white';
-            end
-            if nargin < 3
-                i = 1;
-                j = 2;
-                k = 3;
-            end
-            obj.postProcessData;
-            plot3(obj.data(:,i), obj.data(:,j), obj.data(:,k))
-            xlabel(obj.dataName{i});
-            ylabel(obj.dataName{j});
-            zlabel(obj.dataName{k})
+            p = plot3(obj.data(:,order(1)), obj.data(:,order(2)), obj.data(:,order(3)), varargin{:});
+            xlabel(obj.dataName{order(1)});
+            ylabel(obj.dataName{order(2)});
+            zlabel(obj.dataName{order(3)})
             grid on; box on; 
         end
         
