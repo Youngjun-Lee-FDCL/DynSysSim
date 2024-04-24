@@ -31,6 +31,9 @@ classdef Simulator < matlab.mixin.Copyable
         end
 
         function obj = propagate(obj, tspan, u)
+            if nargin == 2
+                u = @(t) NaN;
+            end
             if isempty(obj.system.state)
                 error('state should be initialized before calling propagate method');
             end
