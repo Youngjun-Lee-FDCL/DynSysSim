@@ -34,6 +34,7 @@ classdef Simulator < matlab.mixin.Copyable
             if isempty(obj.system.state)
                 error('state should be initialized before calling propagate method');
             end
+     
             if isnumeric(u)
                u = @(t) u; 
             end
@@ -58,6 +59,9 @@ classdef Simulator < matlab.mixin.Copyable
                 obj.stackdata();
                 obj.system.updateState(s_next);
                 obj.system.updateTimes(t_next);
+                if obj.system.stopConds(t_next, s_next)
+                    break;
+                end
             end
             obj.elapsedTime = toc;                    
             if obj.INIT 
@@ -93,6 +97,9 @@ classdef Simulator < matlab.mixin.Copyable
                 obj.stackdata_parallel();
                 obj.system.updateState(s_next);
                 obj.system.updateTimes(t_next);
+                if obj.system.stopConds(t_next, s_next)
+                    break;
+                end
             end
             obj.elapsedTime = toc;
             if obj.INIT 

@@ -1,7 +1,7 @@
 classdef FirstOrderSystem < DynSystems
     properties
         taus
-        dataNames = {"s1","s2","s3"}
+        dataNames = [{"s1"},{"s2"},{"s3"}]
     end
     methods
         function obj = FirstOrderSystem(name, s0, logOn)
@@ -49,7 +49,6 @@ classdef FirstOrderSystem < DynSystems
             sim1_log.state.subplots(1, "states", "-","k",1);
             sim2_log.state.subplots(1, "states", "--", "r", 1);
             
-
             rmpath("../simulator/")
             rmpath("../utils/")
             rmpath("../solvers/")

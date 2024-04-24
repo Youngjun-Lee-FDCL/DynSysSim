@@ -15,7 +15,8 @@ classdef DynSystems < handle
         subSysIdxes
         isLogOn = false
         logData = false
-        holder
+        holder = {}
+        holderNum = 1
     end
         
     methods
@@ -23,6 +24,7 @@ classdef DynSystems < handle
             if nargin == 3
                 obj.isLogOn = logOn;
             end
+            in = in(:);
             assert(or(iscell(in), isnumeric(in)), 'invalid input');
             if iscell(in)              
                 obj.subSysCell = in;
@@ -41,6 +43,7 @@ classdef DynSystems < handle
                 obj.stateSize = numel(in);
             end
             obj.name = name;
+            
         end
 
         function out = dynEqns(obj, t, ~, u)
@@ -66,7 +69,7 @@ classdef DynSystems < handle
         end
 
         function s_next = step(obj, t, s, u, dt)
-            obj.holder = [];
+            obj.holder = cell(obj.holderNum, 1);
             f = obj.setODEfun(u);
             
             obj.switchLogData(true);
@@ -78,12 +81,14 @@ classdef DynSystems < handle
             s_next = s + 1/6 * (k1 + 2*k2 + 2*k3 + k4);
         end
 
-        function [varargout] = ZeroOrderHold(obj, varargin)
+        function [varargout] = ZeroOrderHold(obj, holderNum, varargin)
             if isempty(obj.holder)
                 varargout = varargin;
-                obj.holder = varargin;
+            elseif isempty(obj.holder{holderNum})
+                varargout = varargin;
+                obj.holder{holderNum} = varargin;
             else
-                varargout = obj.holder;
+                varargout = obj.holder{holderNum};
             end
         end
 
@@ -152,6 +157,10 @@ classdef DynSystems < handle
                     end
                 end
             end
+        end
+        
+        function out = stopConds(~, ~, ~)
+            out = false;
         end
     end
 end

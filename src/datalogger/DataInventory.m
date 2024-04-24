@@ -12,6 +12,7 @@ classdef DataInventory < matlab.mixin.Copyable
     properties (Hidden)
         interval
         startval
+        axes
     end
     methods
         function [obj, str] = DataInventory(fieldNames, dataNames, indepVarSpan)           
@@ -27,13 +28,13 @@ classdef DataInventory < matlab.mixin.Copyable
                 obj.dataLen = numel(indepVarSpan);
                 obj.startval = indepVarSpan(1);
                 obj.interval = diff(indepVarSpan(1:2));
-                obj.dataNum = length([dataNames{:}]);
+                obj.dataNum = length(dataNames);
                 obj.dataName = dataNames;
                 obj.data = nan(length(indepVarSpan), obj.dataNum);
                 obj.indepVar = indepVarSpan;
                 str.(fieldNames{1}) = obj;
             else                
-                assert(length(fieldNames)==length(dataNames), "fieldnams does not match with dataName: Check dataNames properties")
+                assert(length(fieldNames)==length(dataNames), "fieldnams does not match with dataNames: Check dataNames property")
                 objs = cell(1, numFieldNames);
                 for i = 1:numFieldNames
                     objs{i} = DataInventory(fieldNames(i), dataNames{i}, indepVarSpan);
@@ -54,53 +55,94 @@ classdef DataInventory < matlab.mixin.Copyable
             end
         end
         
-        function p = subplots(obj, fignum, Title, linestyle, color, idx)
+        function [p, axes] = subplots(obj, fignum, Title, linestyle, color, idx, layout, arrange, axes)
             switch nargin
                 case 1
                     figure();
                     idx = 1:1:obj.dataNum;
                     linestyle = "";
                     color = "default";
+                    layout = [length(idx), 1];
+                    arrange = num2cell(idx);
+                    obj.axes = cell(length(idx), 1);
                 case 2
                     figure(fignum);
                     idx = 1:1:obj.dataNum;
                     linestyle = "";
                     color = "default";
+                    layout = [length(idx), 1];
+                    arrange = num2cell(idx);
+                    obj.axes = cell(length(idx), 1);
                 case 3
                     fig = figure(fignum);
                     fig.Name = Title;
                     idx = 1:1:obj.dataNum;
                     linestyle = "";
                     color = "default";
+                    layout = [length(idx), 1];
+                    arrange = num2cell(idx);
+                    obj.axes = cell(length(idx), 1);
                 case 4
                     fig = figure(fignum);
                     fig.Name = Title;
                     idx = 1:1:obj.dataNum;
                     color = "default";
+                    layout = [length(idx), 1];
+                    arrange = num2cell(idx);
+                    obj.axes = cell(length(idx), 1);
                 case 5
                     fig = figure(fignum);
                     fig.Name = Title;
                     idx = 1:1:obj.dataNum;
+                    layout = [length(idx), 1];
+                    arrange = num2cell(idx);
+                    obj.axes = cell(length(idx), 1);
                 case 6
                     fig = figure(fignum);
                     fig.Name = Title;
+                    layout = [length(idx), 1];
+                    arrange = num2cell(idx);
+                    obj.axes = cell(length(idx), 1);
+                case 7
+                    fig = figure(fignum);
+                    fig.Name = Title;
+                    arrange = num2cell(idx);
+                    obj.axes = cell(length(idx), 1);
+                case 8
+                    fig = figure(fignum);
+                    fig.Name = Title;
+                    obj.axes = cell(length(idx), 1);
+                case 9
+                    fig = figure(fignum);
+                    fig.Name = Title;
+                    if isempty(axes)
+                        obj.axes = cell(length(idx), 1);
+                    else
+                        obj.axes = axes;
+                    end
             end
             obj.postProcessData;
             p = cell(length(idx) , 1); % preallocation
             for i = 1:1:length(idx)
                 k = idx(i);
-                subplot(length(idx), 1, i); hold on;
+                if isempty(obj.axes{i})
+                    obj.axes{i} = subplot(layout(1), layout(2), arrange{i}); hold on;
+                else
+                    subplot(layout(1), layout(2), arrange{i}, obj.axes{i}); hold on;
+                end
                 if i == 1 && nargin > 2
-                    title(Title);
+                    sgtitle(Title);
                 end
                 if isempty(obj.dataName{k})
                     obj.dataName{k} = '';
                 end
-                p{i} = plot(obj.indepVar, obj.data(:, k),linestyle, color=color, DisplayName=obj.dataName{k});
+                ndata = size(obj.data, 1);
+                p{i} = plot(obj.indepVar(1:ndata), obj.data(:, k),linestyle, color=color, DisplayName=obj.dataName{k});
                 ylabel(obj.dataName{k});
                 box on; grid on;
-            end      
-             xlabel('Time [sec]');
+                xlabel('Time [sec]');
+            end
+            axes = obj.axes;
         end
         
         function p = plot(obj, fignum, Title, idx)
@@ -126,8 +168,10 @@ classdef DataInventory < matlab.mixin.Copyable
             hold on;
             title(Title);
             xlabel('Time [sec]');box on; grid on;
+            ylabel(obj.fieldName);
+            ndata = size(obj.data, 1);
             for i = 1:length(idx)                
-                p{i} = plot(obj.indepVar, obj.data(:, idx(i)),'DisplayName', obj.dataName{idx(i)});
+                p{i} = plot(obj.indepVar(1:ndata), obj.data(:, idx(i)),'DisplayName', obj.dataName{idx(i)});
             end           
         end
         

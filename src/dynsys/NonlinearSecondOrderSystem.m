@@ -1,17 +1,11 @@
 % This is second-order system class which is originated from source code of Prof. Shin
-classdef NonlinearSecondOrderSystem < SecondOrderSystem
-%     properties (Hidden)
-%         dataNames = {["x","xdot"],["xdot","xddot"],"Command"}
-%     end    
-        
+classdef NonlinearSecondOrderSystem < SecondOrderSystem        
     methods
         function obj = NonlinearSecondOrderSystem(name, s0, logOn)  
             obj = obj@SecondOrderSystem(name, s0, logOn);
-            obj.name = name;
         end
         
         function sDot = dsdt(obj, ~, s, u) 
-            t = obj.time;
             x = s(1);
             x_dot = s(2);
             x_ddot = - obj.sat(x, obj.xLim) * obj.omega^2 ...
