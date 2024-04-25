@@ -145,7 +145,7 @@ classdef DataInventory < matlab.mixin.Copyable
             axes = obj.axes;
         end
         
-        function axes = subplot(obj, fignum, axes_or_idx_1, axes_or_idx_2, varargin)
+        function [axes, ps] = subplot(obj, fignum, axes_or_idx_1, axes_or_idx_2, varargin)
             default_axes = (obj.dataNum * 100 + 10 + 1):(obj.dataNum * 100 + 10 + obj.dataNum);
             default_idx = 1:1:obj.dataNum;
             if nargin == 1
@@ -248,7 +248,7 @@ classdef DataInventory < matlab.mixin.Copyable
             nsubfig = length(idx);
             for i = 1:1:nsubfig
                 k = idx(i);
-                axes(k) = subplot(axes(k)); hold on;
+                axes(i) = subplot(axes(i)); hold on;
                 if isempty(obj.dataName{k})
                     obj.dataName{k} = '';
                 end
