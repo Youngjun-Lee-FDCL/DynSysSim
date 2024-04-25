@@ -138,7 +138,7 @@ classdef Simulator < matlab.mixin.Copyable
         end
         
         function report(obj)
-            fprintf('[Elapsed simulation time] %.2f seconds \n',obj.elapsedTime)
+            fprintf('[%s] Elapsed simulation time: %.2f seconds \n',obj.system.name, obj.elapsedTime)
         end
         
         function f = set_f(obj, u)
