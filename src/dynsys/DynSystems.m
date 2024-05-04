@@ -20,11 +20,15 @@ classdef DynSystems < handle
     end
         
     methods
-        function obj = DynSystems(name, in, logOn) 
-            if nargin == 3
-                obj.isLogOn = logOn;
+        function obj = DynSystems(name, in, logOn, state_rest) 
+            arguments
+                name
+                in
+                logOn
+                state_rest = []
             end
-            in = in(:);
+            state_rest = state_rest(:);
+            obj.isLogOn = logOn;
             assert(or(iscell(in), isnumeric(in)), 'invalid input');
             if iscell(in)              
                 obj.subSysCell = in;
@@ -35,15 +39,16 @@ classdef DynSystems < handle
                     obj.subSysSize(i) = stSize;
                     stateArr(startIdx:startIdx + stSize -1, 1) = in{i}.state;
                     startIdx = startIdx  + stSize;
-                end                   
-                obj.updateState(stateArr);
-                obj.stateSize = startIdx - 1;
+                end             
+                s = [stateArr; state_rest];
+                obj.updateState(s);
+                obj.stateSize = numel(s);
             else
-                obj.updateState(in);   
-                obj.stateSize = numel(in);
+                s = [in; state_rest];
+                obj.updateState(s);   
+                obj.stateSize = numel(s);
             end
             obj.name = name;
-            
         end
 
         function out = dynEqns(obj, t, ~, u)
@@ -70,7 +75,7 @@ classdef DynSystems < handle
 
         function s_next = step(obj, t, s, u, dt)
             obj.holder = cell(obj.holderNum, 1);
-            f = obj.setODEfun(u);
+            f = obj.setODEfun(u); 
             
             obj.switchLogData(true);
             k1 = f(t, s) * dt;
@@ -101,10 +106,12 @@ classdef DynSystems < handle
         end
 
         function [varargout] = getSubStates(obj)
-            varargout = cell(obj.subSysNum, 1);
+            varargout = cell(obj.subSysNum + 1, 1);
             for i = 1:obj.subSysNum
                 varargout{i} = obj.subSysCell{i}.state;
             end
+            startIdx = sum(obj.subSysSize);
+            varargout{end} = obj.state(startIdx:end);
         end
 
         function updateState(obj, state)
@@ -139,14 +146,15 @@ classdef DynSystems < handle
 
         function [varargout] = splitStates(obj, state)
             stSizes = obj.subSysSize;
-            varargout = cell(obj.subSysNum, 1);
+            varargout = cell(obj.subSysNum + 1, 1);
             startIdx = 1;
             for i = 1:obj.subSysNum
                 varargout{i} = state(startIdx:startIdx + stSizes(i) -1);
                 startIdx = startIdx  + stSizes(i);
             end
+            varargout{end} = state(startIdx:end);
         end
-
+        
         function switchLogData(obj, bool)
             if obj.isLogOn == true
                 obj.logData = bool;
@@ -158,9 +166,10 @@ classdef DynSystems < handle
                 end
             end
         end
-        
+
         function out = stopConds(~, ~, ~)
             out = false;
         end
+
     end
 end
