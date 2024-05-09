@@ -46,7 +46,8 @@ classdef DataInventory < matlab.mixin.Copyable
         end
              
         function append(obj, data)
-            startIdx = obj.lastAppenedIdx + 1;           
+            startIdx = obj.lastAppenedIdx + 1;          
+            obj.dynamicAllocation(data);
             obj.data(startIdx, :) = data;
             obj.lastAppenedIdx = startIdx;
             if obj.lastAppenedIdx > obj.dataLen
@@ -55,6 +56,14 @@ classdef DataInventory < matlab.mixin.Copyable
             end
         end
         
+        function dynamicAllocation(obj, data)
+            if obj.dataNum == 0
+                obj.dataNum = numel(data);
+                obj.data = nan(numel(obj.indepVar), obj.dataNum);
+                obj.dataName = repmat("undef", numel(data), 1);
+            end
+        end
+
         function [ps, axes] = subplots(obj, fignum, Title, linestyle, color, idx, layout, arrange, axes)
             switch nargin
                 case 1
@@ -145,7 +154,7 @@ classdef DataInventory < matlab.mixin.Copyable
             axes = obj.axes;
         end
         
-        function [axes, ps] = subplot(obj, fignum, axes_or_idx_1, axes_or_idx_2, varargin)
+        function [Axes, ps] = subplot(obj, fignum, axes_or_idx_1, axes_or_idx_2, varargin)
             default_axes = (obj.dataNum * 100 + 10 + 1):(obj.dataNum * 100 + 10 + obj.dataNum);
             default_idx = 1:1:obj.dataNum;
             if nargin == 1
@@ -246,9 +255,10 @@ classdef DataInventory < matlab.mixin.Copyable
 
             obj.postProcessData;
             nsubfig = length(idx);
+            Axes = [];
             for i = 1:1:nsubfig
                 k = idx(i);
-                axes(i) = subplot(axes(i)); hold on;
+                 Axes = [Axes; subplot(axes(i))]; hold on;
                 if isempty(obj.dataName{k})
                     obj.dataName{k} = '';
                 end
