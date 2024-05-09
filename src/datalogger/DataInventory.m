@@ -281,7 +281,7 @@ classdef DataInventory < matlab.mixin.Copyable
                 varargin = [{fignum}, {idx}, varargin(:)'];
                 idx = 1:1:obj.dataNum;
             end
-            if nargin <= 3
+            if nargin < 3
                 idx = 1:1:obj.dataNum;
             end
             if mod(nargin-4, 2) == 0 && nargin >= 4
