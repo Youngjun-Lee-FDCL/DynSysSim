@@ -179,8 +179,9 @@ classdef DataInventory < matlab.mixin.Copyable
                         axes = axes_or_idx_1;
                         idx = default_idx;
                     else
-                        axes = default_axes;
+                        n = length(axes_or_idx_1);
                         idx = axes_or_idx_1;
+                        axes = (n * 100 + 10 + 1):(n * 100 + 10 + n);
                     end
                     varargin = {};
                 end
@@ -258,12 +259,18 @@ classdef DataInventory < matlab.mixin.Copyable
             Axes = [];
             for i = 1:1:nsubfig
                 k = idx(i);
-                 Axes = [Axes; subplot(axes(i))]; hold on;
-                if isempty(obj.dataName{k})
-                    obj.dataName{k} = '';
-                end
                 ndata = size(obj.data, 1);
-                ps{i} = plot(obj.indepVar(1:ndata), obj.data(:, k), varargin{:});
+                if nsubfig == 1
+                    Axes = plot(obj.indepVar(1:ndata), obj.data(:, k), varargin{:});
+                else
+                    plt = subplot(axes(i));
+                    Axes = [Axes; plt]; hold on;
+                    if isempty(obj.dataName{k})
+                        obj.dataName{k} = '';
+                    end
+                    
+                    ps{i} = plot(obj.indepVar(1:ndata), obj.data(:, k), varargin{:});
+                end
                 ylabel(obj.dataName{k});
                 box on; grid on;
                 xlabel('Time [sec]');
