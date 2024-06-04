@@ -116,6 +116,11 @@ classdef Simulator < matlab.mixin.Copyable
             if isempty(obj.log) && ~isempty(data)
                 fnames = fieldnames(data);
                 fieldCellLength = length(fnames);
+                if fieldCellLength > length(obj.system.dataNames)
+                    for k = length(obj.system.dataNames)+1:fieldCellLength
+                        obj.system.dataNames{k} = repmat("undef", length(data.(fnames{k})), 1);
+                    end
+                end
                 [~, obj.log] = DataInventory(fnames, obj.system.dataNames, obj.tspan);
                 for i = 1:fieldCellLength
                     obj.log.(fnames{i}).append(data.(fnames{i}));
