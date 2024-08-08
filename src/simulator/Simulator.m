@@ -9,25 +9,23 @@ classdef Simulator < matlab.mixin.Copyable
         INIT = 1
         elapsedTime = 0
         logSwitches
-        logHist
         fieldNames
         tspan
     end
   
     methods
-        function obj = Simulator(system, logHist, psim)
+        function obj = Simulator(system, psim)
             if nargin <= 1
-                logHist = false;
-            end
-            if nargin == 3
+                obj.psim = false;
+            else
                 obj.psim = psim;
             end
+            
             classes = superclasses(system);
             if ~strcmp(classes{end-1}, 'DynSystems')
                 error('invalid system')
             end
             obj.system = system;
-            obj.logHist = logHist;
         end
 
         function obj = propagate(obj, tspan, u)
