@@ -5,7 +5,7 @@ classdef NonlinearSecondOrderSystem < SecondOrderSystem
             obj = obj@SecondOrderSystem(name, s0, logOn);
         end
         
-        function sDot = dsdt(obj, ~, s, u) 
+        function sDot = dynEqns(obj, ~, s, u) 
             x = s(1);
             x_dot = s(2);
             x_ddot = - obj.sat(x, obj.xLim) * obj.omega^2 ...
