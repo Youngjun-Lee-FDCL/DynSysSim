@@ -20,6 +20,9 @@ classdef SecondOrderSystem < DynSystems
         end
 
         function sDot = dynEqns(obj, ~, s, u) 
+            if isempty(obj.omega) || isempty(obj.xi)
+                error("Natural frequency or damping ratio is not set, please check if you call setParams before evaluating the propgate method")
+            end
             s1 = s(1);
             s2 = s(2);
             A = [0, 1; -obj.omega^2, -2*obj.xi*obj.omega];
