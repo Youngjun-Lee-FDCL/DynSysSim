@@ -8,9 +8,10 @@ classdef NonlinearSecondOrderSystem < SecondOrderSystem
         function sDot = dsdt(obj, ~, s, u) 
             x = s(1);
             x_dot = s(2);
-            x_ddot = - obj.sat(x, obj.xLim) * obj.omega^2 ...
-                     - 2 * obj.xi*obj.omega*obj.sat(x_dot, obj.xDotLim)...
-                     + u * obj.omega^2;
+%             x_ddot = - obj.sat(x, obj.xLim) * obj.omega^2 ...
+%                      - 2 * obj.xi*obj.omega*obj.sat(x_dot, obj.xDotLim)...
+%                      + u * obj.omega^2;
+            x_ddot = -2 * obj.xi * obj.omega * x_dot + obj.omega^2 *obj.sat( obj.sat(u, obj.xLim)-x, 2*obj.xDotLim/obj.omega);
             sDot = [x_dot; x_ddot];
             if obj.logData
                 obj.data.state = s;
@@ -39,23 +40,30 @@ classdef NonlinearSecondOrderSystem < SecondOrderSystem
             dt = 0.0005;
             tf = 2;
             tspan = t0:dt:tf;
-            input = @(t) stepCmd(t, 0, deg2rad(10));
+            command = deg2rad(29);
+            input = @(t) command*sin(100*t);
 
             sim = Simulator(sys).propagate(tspan, input);
             sim.report();
             log = sim.log;
 
             % analytic solution
-            c = @(t, xi, omega, v) v*(1 - exp(-xi*omega*t)/sqrt(1-xi^2)...
-                .*sin( omega*sqrt(1-xi^2)*t + atan( sqrt(1-xi^2)/xi)));
-            traj = c(sim.tspan, xi, omega, deg2rad(10));
+%             c = @(t, xi, omega, v) v*(1 - exp(-xi*omega*t)/sqrt(1-xi^2)...
+%                 .*sin( omega*sqrt(1-xi^2)*t + atan( sqrt(1-xi^2)/xi)));
+%             traj = c(sim.tspan, xi, omega, command);
              
             % Plots
             log.cmd.plot(1); hold on;
-            log.state.plot(1, 'Second order system history', 1);
-            plot(sim.tspan, traj,"--")
-            legend("Command","Ours","Analytic solutions")
+            log.state.plot(1, 1);
+%             plot(sim.tspan, traj,"--")
+            plot(tspan, sys.xLim*ones(length(tspan),1), "--k");
+            plot(tspan, -sys.xLim*ones(length(tspan),1), "--k");
+            legend("Command","Ours");%,"Analytic solutions")
             
+            log.state.plot(2, 2); hold on;
+            plot(tspan, sys.xDotLim*ones(length(tspan),1), "--k");
+            plot(tspan, -sys.xDotLim*ones(length(tspan),1), "--k");
+
             % Remove path
             rmpath("../simulator/")
             rmpath("../utils/")

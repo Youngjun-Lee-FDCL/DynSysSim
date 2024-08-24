@@ -70,7 +70,12 @@ classdef Simulator < matlab.mixin.Copyable
             if obj.INIT 
                 obj.INIT = false;
             end
-
+            
+            % post processing log (DataInventory)
+            fnames = fields(obj.log);
+            for k = 1:length(fnames)
+                obj.log.(fnames{k}).postProcessData;
+            end
             if obj.psim == true
                 obj.log = DataInventory.obj2str(obj.log);
             end
