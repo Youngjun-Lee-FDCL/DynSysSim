@@ -11,7 +11,8 @@ classdef NonlinearSecondOrderSystem < SecondOrderSystem
 %             x_ddot = - obj.sat(x, obj.xLim) * obj.omega^2 ...
 %                      - 2 * obj.xi*obj.omega*obj.sat(x_dot, obj.xDotLim)...
 %                      + u * obj.omega^2;
-            x_ddot = -2 * obj.xi * obj.omega * x_dot + obj.omega^2 *obj.sat( obj.sat(u, obj.xLim)-x, 2*obj.xDotLim/obj.omega);
+            factor = 1.4286;
+            x_ddot = -2 * obj.xi * obj.omega * x_dot + obj.omega^2 *obj.sat( obj.sat(u, obj.xLim)-x, 2*obj.xDotLim/factor/obj.omega);
             sDot = [x_dot; x_ddot];
             if obj.logData
                 obj.data.state = s;
@@ -31,17 +32,18 @@ classdef NonlinearSecondOrderSystem < SecondOrderSystem
 
             xi = 0.7;
             omega = 50; % [rad/s]
-            xLim =  deg2rad(30); %[rad]
-            xDotLim = deg2rad(500); % [rad/s]
+            xLim =  deg2rad(10); %[rad]
+            xDotLim = deg2rad(50); % [rad/s]
             s0 = [0;0];
             logOn = true;
             sys = NonlinearSecondOrderSystem('sys', s0, logOn).setParams(xi, omega, xLim, xDotLim);   
             t0 = 0;
-            dt = 0.0005;
+            dt = 0.0025;
             tf = 2;
             tspan = t0:dt:tf;
-            command = deg2rad(29);
-            input = @(t) command*sin(100*t);
+%             v = deg2rad([10,-10,10]);
+%             input = @(t) stepCmd(t, [0, 0.2,0.4], v);
+            input = @(t) sin(10*t);
 
             sim = Simulator(sys).propagate(tspan, input);
             sim.report();
@@ -63,7 +65,7 @@ classdef NonlinearSecondOrderSystem < SecondOrderSystem
             log.state.plot(2, 2); hold on;
             plot(tspan, sys.xDotLim*ones(length(tspan),1), "--k");
             plot(tspan, -sys.xDotLim*ones(length(tspan),1), "--k");
-
+            disp(max(abs(log.state.data(:,2)))/sys.xDotLim);
             % Remove path
             rmpath("../simulator/")
             rmpath("../utils/")

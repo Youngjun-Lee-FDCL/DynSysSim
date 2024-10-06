@@ -63,25 +63,34 @@ classdef SecondOrderSystem < DynSystems
             addpath("../datalogger/")
             
             xi = 0.7;
-            omega = 250;
+            omega = 40;
             xLim =  deg2rad(10); %[rad]
-            xDotLim = deg2rad(500); % [rad/s]
+            xDotLim = deg2rad(200); % [rad/s]
             logOn = true;
             sys = SecondOrderSystem('sys', [0;0], logOn).setParams(xi, omega, xLim, xDotLim);
             t0 = 0;
             dt = 0.0025;
             tf = 2;
             tspan = t0:dt:tf;
-            input = @(t) stepCmd(t, [0,0.5,1], deg2rad([5,-5,5]));
+            v = deg2rad([10,-10,10]);
+            input = @(t) stepCmd(t, [0, 0.2,0.4], v);
             
             sim = Simulator(sys).propagate(tspan, input);
             sim.report();
             log = sim.log;
 
-            log.state.plot(1, 'Second order system history', 1);
+            fig = figure(Name="state");
+            log.state.plot(fig.Number, 1);
+            plot(tspan, xLim*ones(length(tspan), 1), "--k")
+            plot(tspan, -xLim*ones(length(tspan), 1), "--k")
+            hold on;
             log.cmd.plot();
-
-            % remove path
+            fig = figure(Name = "state derivative");
+            log.state.plot(fig.Number, 2); hold on;
+            plot(tspan, xDotLim*ones(length(tspan),1), "--k")
+            
+            
+            % Remove path
             rmpath("../simulator/")
             rmpath("../utils/")
             rmpath("../solvers/")
