@@ -15,7 +15,7 @@ classdef TimeDelay < handle
         end
 
         function y_delay = delay(obj, t, y)  
-            assert(t > obj.time, 'Current time must be larger than previous time')
+            assert(t >= obj.time-eps(), 'Current time must not be smaller than previous time')
 %             if t > 0
 %                 assert(round(t-obj.time, 6) == obj.simulationTimeInterval, 'Time interval must be the same with the predefined simulation time interval')
 %             end
@@ -36,7 +36,7 @@ classdef TimeDelay < handle
         function test()
             disp('[Test TimeDelay class]');
             dt = 0.01;
-            tau = 0.01;
+            tau = 0.03;
             t = 0:dt:1;
             y = [sin(2*pi*t); cos(2*pi*t)];
             

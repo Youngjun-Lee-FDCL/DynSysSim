@@ -87,7 +87,7 @@ classdef DynSystems < handle
         end
 
         function [varargout] = ZeroOrderHold(obj, holderNum, varargin)
-            if isempty(obj.holder)
+            if isempty(obj.holder) % before dynamic equation enter step function (not propagating)
                 varargout = varargin;
             elseif isempty(obj.holder{holderNum})
                 varargout = varargin;

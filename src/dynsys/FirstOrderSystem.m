@@ -1,7 +1,7 @@
 classdef FirstOrderSystem < DynSystems
     properties
         taus
-        dataNames = [{"s1"},{"s2"},{"s3"}]
+        dataNames = {["s1","s2","s3"], ["s1_dot","s2_dot","s3_dot"]}
     end
     methods
         function obj = FirstOrderSystem(name, s0, logOn)
@@ -16,6 +16,7 @@ classdef FirstOrderSystem < DynSystems
             ds = 1./obj.taus .* (u - s);
              if obj.logData
                 obj.data.state = s;
+                obj.data.ds = ds;
             end
         end
     end
@@ -38,17 +39,26 @@ classdef FirstOrderSystem < DynSystems
             
             t0 = 0;
             dt = 0.01;
-            tf = 0.1;
+            tf = 4;
             tspan = t0:dt:tf;
-            input = @(t) stepCmd(t, 0, 1);
+            input = @(t) sin(5*t); %@(t) stepCmd(t, [0,1,2,3], [1,-1,1,-1]);
+            d_input = @(t) 5*cos(5*t);
             sim1 = Simulator(sys).propagate(tspan, input);
             sim2 = Simulator(sys_tr).propagate(tspan, input);
-
+            
+            
             sim1_log = sim1.log();
             sim2_log = sim2.log();
+
+            % plot
             sim1_log.state.subplots(1, "states", "-","k",1);
             sim2_log.state.subplots(1, "states", "--", "r", 1);
+            plot(tspan, input(tspan));
             
+            fig = figure(Name="derivative estimates"); hold on;
+            sim1_log.ds.plot(fig.Number);
+            plot(tspan, d_input(tspan));
+
             rmpath("../simulator/")
             rmpath("../utils/")
             rmpath("../solvers/")
