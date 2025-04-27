@@ -13,6 +13,7 @@ classdef DynSystems < handle
         subSysNum = 0
         subSysSize 
         subSysIdxes
+        stateRestSize
         isLogOn = false
         logData = false
         holder = {}
@@ -28,6 +29,7 @@ classdef DynSystems < handle
                 state_rest = []
             end
             state_rest = state_rest(:);
+            obj.stateRestSize = numel(state_rest);
             obj.isLogOn = logOn;
             assert(or(iscell(in), isnumeric(in)), 'invalid input');
             if iscell(in)              
@@ -146,7 +148,7 @@ classdef DynSystems < handle
 
         function [varargout] = splitStates(obj, state)
             stSizes = obj.subSysSize;
-            if sum(stSizes) ~= numel(state)
+            if sum(stSizes) + obj.stateRestSize ~= numel(state)
                 error("The sum of dimensions of pre-specified substates and the one of entered state are not matched")
             end
             varargout = cell(obj.subSysNum + 1, 1);
