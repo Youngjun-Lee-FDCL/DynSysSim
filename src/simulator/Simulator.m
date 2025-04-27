@@ -117,15 +117,15 @@ classdef Simulator < matlab.mixin.Copyable
         function stackdata(obj)
             data = obj.system.data;
             if isempty(obj.log) && ~isempty(data)
-                fnames = fieldnames(data);
-                fieldCellLength = length(fnames);
-                if fieldCellLength > length(obj.system.dataNames)
-                    for k = length(obj.system.dataNames)+1:fieldCellLength
-                        obj.system.dataNames{k} = repmat("undef", length(data.(fnames{k})), 1);
+                fnames = fieldnames(data); % extract file names
+                numFieldNames = length(fnames); %
+                if numFieldNames > length(obj.system.dataNames)
+                    for k = length(obj.system.dataNames)+1:numFieldNames
+                        obj.system.dataNames{k} = repmat("undef", 1, length(data.(fnames{k})));
                     end
                 end
                 [~, obj.log] = DataInventory(fnames, obj.system.dataNames, obj.tspan);
-                for i = 1:fieldCellLength
+                for i = 1:numFieldNames
                     obj.log.(fnames{i}).append(data.(fnames{i}));
                 end
                 obj.fieldNames = fnames;
