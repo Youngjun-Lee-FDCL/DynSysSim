@@ -7,6 +7,7 @@ classdef DataInventory < matlab.mixin.Copyable
         dataLen        
         lastAppenedIdx = 0
         indepVar
+        xlabelName = "Time (sec)"
     end
     
     properties (Hidden)
@@ -37,6 +38,9 @@ classdef DataInventory < matlab.mixin.Copyable
                 assert(length(fieldNames)==length(dataNames), "fieldnams does not match with dataNames: Check dataNames property")
                 objs = cell(1, numFieldNames);
                 for i = 1:numFieldNames
+                    if ischar(dataNames{i})
+                        dataNames{i} = string(dataNames{i});
+                    end
                     objs{i} = DataInventory(fieldNames(i), dataNames{i}, indepVarSpan);
                 end
                 arguments = [fieldNames(:).';objs];
@@ -48,6 +52,9 @@ classdef DataInventory < matlab.mixin.Copyable
         function append(obj, data)
             startIdx = obj.lastAppenedIdx + 1;          
             obj.dynamicAllocation(data);
+            if obj.dataNum ~= numel(data)
+                error("[Mismatched size] "+"Name :"+obj.fieldName{1} +" / Size of data: "+num2str(numel(obj.dataName))+" / Size of input: "+num2str(numel(data)))
+            end
             obj.data(startIdx, :) = data;
             obj.lastAppenedIdx = startIdx;
             if obj.lastAppenedIdx > obj.dataLen
@@ -60,7 +67,7 @@ classdef DataInventory < matlab.mixin.Copyable
             if obj.dataNum == 0
                 obj.dataNum = numel(data);
                 obj.data = nan(numel(obj.indepVar), obj.dataNum);
-                obj.dataName = repmat("undef", numel(data), 1);
+                obj.dataName = repmat("undef", 1, numel(data));
             end
         end
 
@@ -148,8 +155,8 @@ classdef DataInventory < matlab.mixin.Copyable
                 ndata = size(obj.data, 1);
                 ps{i} = plot(obj.indepVar(1:ndata), obj.data(:, k),linestyle, color=color, DisplayName=obj.dataName{k});
                 ylabel(obj.dataName{k});
-                box on; grid on;
-                xlabel('Time [sec]');
+                box on; grid on; hold on;
+                xlabel(obj.xlabelName);
             end
             axes = obj.axes;
         end
@@ -362,6 +369,47 @@ classdef DataInventory < matlab.mixin.Copyable
             len = obj.lastAppenedIdx;
             obj.data(len+1:end, :) = [];
         end
+
+        function savecsv(obj, savePath)
+            postProcessData(obj);
+            cellData = num2cell([obj.indepVar(:) obj.data], 1);
+            T = table(cellData{:}, 'VariableNames', cellstr([obj.xlabelName obj.dataName]));
+            if ~exist(savePath, 'dir')
+                mkdir(savePath)
+            end
+            writetable(T, fullfile(savePath,obj.fieldName+".csv"));
+        end
+
+        function out = get_RAE(obj)
+            len = size(obj.data, 1);
+            L1_norm = sum(abs(obj.data), 1); % column-wise
+            out = sqrt(L1_norm / len);
+            if numel(out) ~= size(obj.data, 2)
+                error("Invalid dimension of RAE calculation")
+            end
+        end
+
+        function out = get_RMS(obj)
+            squared_error = obj.data.^2;
+            mse = mean(squared_error, 1);
+            out = sqrt(mse);
+            if numel(out) ~=  size(obj.data, 2)
+                error("Invalid dimension of RMS calculation")
+            end
+        end
+
+        function out = get_dominant_frequency(obj, Fs)
+            for i = 1:size(obj.data,2)
+                signal = obj.data(:, i);
+                N = length(signal);
+                fft_signal = fft(signal);
+                freq = (0:N-1)*(Fs/N); % frequency vector
+
+                fft_magnitude = abs(fft_signal);
+                [~, index] = max(fft_magnitude);
+                out(i) = freq(index);
+            end
+        end
     end
     
     methods (Static)
@@ -423,6 +471,9 @@ classdef DataInventory < matlab.mixin.Copyable
             end
         end
         function objs = str2obj(str)
+            if isa(str, "DataInventory")
+                return
+            end
             fieldNames = fieldnames(str);
             nfield = length(fieldNames);
             for i  = 1:nfield
