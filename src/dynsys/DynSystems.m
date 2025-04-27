@@ -146,13 +146,27 @@ classdef DynSystems < handle
 
         function [varargout] = splitStates(obj, state)
             stSizes = obj.subSysSize;
+            if sum(stSizes) ~= numel(state)
+                error("The sum of dimensions of pre-specified substates and the one of entered state are not matched")
+            end
             varargout = cell(obj.subSysNum + 1, 1);
             startIdx = 1;
             for i = 1:obj.subSysNum
                 varargout{i} = state(startIdx:startIdx + stSizes(i) -1);
                 startIdx = startIdx  + stSizes(i);
             end
-            varargout{end} = state(startIdx:end);
+            varargout{end} = state(startIdx:end); % remaining state
+        end
+
+        function out = splitStates_cell(obj, state)
+            stSizes = obj.subSysSize;
+            out = cell(obj.subSysNum + 1, 1);
+            startIdx = 1;
+            for i = 1:obj.subSysNum
+                out{i} = state(startIdx:startIdx + stSizes(i) -1);
+                startIdx = startIdx  + stSizes(i);
+            end
+            out{end} = state(startIdx:end);
         end
         
         function switchLogData(obj, bool)
