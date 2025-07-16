@@ -22,12 +22,12 @@ classdef HighOrderDisturbanceObserver < DynSystems
         end
 
         function ds = dynEqns(obj, t, s, u)
-            F_sinv = pinv(obj.F(t));
-            dim_x = size(obj.F(t), 1);
+            F_sinv = pinv(obj.F(t, u));
+            dim_x = size(obj.F(t, u), 1);
             x = s(1:dim_x);
             z = s(dim_x+1:end);
 
-            dx = obj.f(x, u , t) + obj.F(t)*obj.d(t);
+            dx = obj.f(x, u, t) + obj.F(t, u)*obj.d(t);
             dz = F_sinv * obj.f(x, u, t) + obj.Gamma0 * (F_sinv*x - z);
             ds = vertcat(dx, dz);
 
@@ -35,12 +35,12 @@ classdef HighOrderDisturbanceObserver < DynSystems
                 obj.data.x = x;
                 obj.data.z = z;
                 obj.data.d = obj.d(t);
-                obj.data.d_hat = obj.get_d_hat(t, x, z);
+                obj.data.d_hat = obj.get_d_hat(t, x, z, u);
             end
         end
 
-        function out = get_d_hat(obj, t, x, z)
-            F_sinv = pinv(obj.F(t));
+        function out = get_d_hat(obj, t, x, z, u)
+            F_sinv = pinv(obj.F(t, u));
             out = obj.Gamma0 * (F_sinv*x - z);
         end
     end
@@ -48,7 +48,7 @@ classdef HighOrderDisturbanceObserver < DynSystems
     methods (Static)
         function test()
             f = @(x, u, t) -2*x;
-            F = @(t) 1;
+            F = @(t, u) 1;
             d = @(t) stepCmd(t, [0, 0.5, 1, 1.5], [1, 0, 1, 0]);
             Gamma0 = 50;
             
