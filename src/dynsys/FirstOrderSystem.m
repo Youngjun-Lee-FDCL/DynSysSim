@@ -1,7 +1,8 @@
 classdef FirstOrderSystem < DynSystems
     properties
         taus
-        dataNames = {["s1","s2","s3"], ["s1_dot","s2_dot","s3_dot"]}
+        n
+        dataNames = cell(2, 1);
     end
     methods
         function obj = FirstOrderSystem(name, s0, logOn)
@@ -10,6 +11,11 @@ classdef FirstOrderSystem < DynSystems
 
         function obj = setParams(obj, taus)
             obj.taus = taus(:);
+            obj.n = length(taus);
+            for i = 1:obj.n
+                obj.dataNames{1} = [obj.dataNames{1},"x"+num2str(i)];
+                obj.dataNames{2} = [obj.dataNames{2},"dx"+num2str(i)];
+            end
         end
 
         function ds = dynEqns(obj, ~, s, u)
@@ -30,7 +36,7 @@ classdef FirstOrderSystem < DynSystems
 
             s0 = zeros(3, 1);
             logOn = true;
-            taus = [0.01; 0.01; 0.01];
+            taus = [0.1; 0.1; 0.1];
             den = [taus(1) 1];
             num = 1;
             order = 1;
@@ -38,7 +44,7 @@ classdef FirstOrderSystem < DynSystems
             sys_tr = TransferFunction("1st-order transfer", 0, logOn).setParams(order, den, num);
             
             t0 = 0;
-            dt = 0.01;
+            dt = 0.0001;
             tf = 4;
             tspan = t0:dt:tf;
             input = @(t) sin(5*t); %@(t) stepCmd(t, [0,1,2,3], [1,-1,1,-1]);
