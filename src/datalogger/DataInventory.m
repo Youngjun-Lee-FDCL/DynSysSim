@@ -335,8 +335,14 @@ classdef DataInventory < matlab.mixin.Copyable
                 varargin = [{order}, varargin(:)'];
                 order = [1, 2, 3];
             end
+            
+            % extract unitConverter from varargin
+            [varargin, a2b] = obj.extractUnitConverter(varargin);
+
+            % post processing
             obj.postProcessData;
-            p = plot3(obj.data(:,order(1)), obj.data(:,order(2)), obj.data(:,order(3)), varargin{:});
+            shownData = obj.data*a2b;
+            p = plot3(shownData(:,order(1)), shownData(:,order(2)), shownData(:,order(3)), varargin{:});
             xlabel(obj.dataName{order(1)});
             ylabel(obj.dataName{order(2)});
             zlabel(obj.dataName{order(3)})
@@ -368,6 +374,18 @@ classdef DataInventory < matlab.mixin.Copyable
         function postProcessData(obj)
             len = obj.lastAppenedIdx;
             obj.data(len+1:end, :) = [];
+        end
+        
+        function [updatedCellArray, value] = extractUnitConverter(~, cellArray)
+            bool = cellfun(@(x) isequal(x, "unitConverter"), cellArray);
+            idx = find(bool==1, 1);
+            if ~isempty(idx)
+                value = cellArray{idx+1};
+                cellArray([idx, idx+1]) = [];  % Erase the string at the found index
+            else
+                value = 1;
+            end
+            updatedCellArray = cellArray;
         end
 
         function savecsv(obj, savePath)
