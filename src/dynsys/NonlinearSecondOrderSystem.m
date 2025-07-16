@@ -1,5 +1,8 @@
 % This is second-order system class which is originated from source code of Prof. Shin
 classdef NonlinearSecondOrderSystem < SecondOrderSystem        
+    properties
+        eps = 0.1
+    end
     methods
         function obj = NonlinearSecondOrderSystem(name, s0, logOn)  
             obj = obj@SecondOrderSystem(name, s0, logOn);
@@ -8,18 +11,17 @@ classdef NonlinearSecondOrderSystem < SecondOrderSystem
         function sDot = dynEqns(obj, ~, s, u) 
             x = s(1);
             x_dot = s(2);
-%             x_ddot = - obj.sat(x, obj.xLim) * obj.omega^2 ...
-%                      - 2 * obj.xi*obj.omega*obj.sat(x_dot, obj.xDotLim)...
-%                      + u * obj.omega^2;
-            factor = 1.4286;
+            factor = 1.4286; %NOTE: do not change
+% factor = 1;
             x_ddot = -2 * obj.xi * obj.omega * x_dot + obj.omega^2 *obj.sat( obj.sat(u, obj.xLim)-x, 2*obj.xDotLim/factor/obj.omega);
+
             sDot = [x_dot; x_ddot];
             if obj.logData
                 obj.data.state = s;
                 obj.data.stateDot = sDot;
                 obj.data.cmd = u;
             end
-        end                     
+        end
     end
     
     methods (Static)
