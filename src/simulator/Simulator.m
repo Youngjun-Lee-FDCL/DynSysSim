@@ -47,7 +47,12 @@ classdef Simulator < matlab.mixin.Copyable
             obj.system.updateTimes(tspan(1));
 
             % check if the dynEqns method designed well
-            f = obj.system.setODEfun(u(tspan(1)));
+            u0 = u(tspan(1));
+            if isnan(u0)
+                f = obj.system.setODEfun();
+            else
+                f = obj.system.setODEfun(u0);
+            end
             dim_bools = size(f(obj.system.time, obj.system.state)) == size(obj.system.state);
             assert(and(dim_bools(1), dim_bools(2)), "Check the input/output of your dynEqns method: the sizes of state and its derivative does not match")
             
