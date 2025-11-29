@@ -206,7 +206,7 @@ classdef DynSystems < handle
                 startIdx = startIdx + sysSize;
             end
             % Leaf 시스템: addProcessNoise를 override해서 사용
-            state = obj.addProcessNoise(state, dt);
+            state = obj.addProcessNoise(state_det, dt);
         end
 
         function state = addProcessNoise(obj, state_det, dt)
