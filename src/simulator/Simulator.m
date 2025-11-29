@@ -63,7 +63,7 @@ classdef Simulator < matlab.mixin.Copyable
                 s_next_det = obj.system.step(t, s, u(t), dt);
                 t_next = round(t + dt ,6);
                 obj.stackdata();
-                s_next = obj.system.applyProcessNoise(s_next_det, dt); 
+                s_next = obj.system.applyProcessNoise(s_next_det, dt);
                 obj.system.updateState(s_next);
                 obj.system.updateTimes(t_next);
                 if obj.system.stopConds(t_next, s_next)
@@ -107,7 +107,7 @@ classdef Simulator < matlab.mixin.Copyable
                 s_next_det = obj.system.step(t, s, u(t), dt);
                 t_next = round(t + dt ,6);
                 obj.stackdata_parallel();
-                s_next = obj.system.applyProcessNoise(s_next_det, dt); 
+                s_next = obj.system.applyProcessNoise(s_next_det, dt);
                 obj.system.updateState(s_next);
                 obj.system.updateTimes(t_next);
                 if obj.system.stopConds(t_next, s_next)
@@ -127,8 +127,13 @@ classdef Simulator < matlab.mixin.Copyable
                 fnames = fieldnames(data); % extract file names
                 numFieldNames = length(fnames); %
                 if numFieldNames > length(obj.system.dataNames)
-                    for k = length(obj.system.dataNames)+1:numFieldNames
-                        obj.system.dataNames{k} = repmat("undef", 1, length(data.(fnames{k})));
+                    for k = length(obj.system.dataNames)+1 : numFieldNames
+                        numCols = length(data.(fnames{k}));
+                        tmp = strings(1, numCols);
+                        for c = 1:numCols
+                            tmp(c) = "undef_" + c;   % 유일한 이름 생성
+                        end
+                        obj.system.dataNames{k} = tmp;
                     end
                 end
                 [~, obj.log] = DataInventory(fnames, obj.system.dataNames, obj.tspan);

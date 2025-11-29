@@ -1,27 +1,27 @@
 classdef DataInventory < matlab.mixin.Copyable
     properties
         fieldName
-        dataName        
+        dataName
         data
         dataNum
-        dataLen        
+        dataLen
         lastAppenedIdx = 0
         indepVar
         xlabelName = "Time (sec)"
     end
-    
+
     properties (Hidden)
         interval
         startval
         axes
     end
     methods
-        function [obj, str] = DataInventory(fieldNames, dataNames, indepVarSpan)           
+        function [obj, str] = DataInventory(fieldNames, dataNames, indepVarSpan)
             if nargin < 1
                 return
             end
             if ischar(fieldNames)
-                    fieldNames = {fieldNames};
+                fieldNames = {fieldNames};
             end
             numFieldNames = numel(fieldNames);
             if numFieldNames == 1
@@ -34,7 +34,7 @@ classdef DataInventory < matlab.mixin.Copyable
                 obj.data = nan(length(indepVarSpan), obj.dataNum);
                 obj.indepVar = indepVarSpan;
                 str.(fieldNames{1}) = obj;
-            else                
+            else
                 assert(length(fieldNames)==length(dataNames), "fieldnams does not match with dataNames: Check dataNames property")
                 objs = cell(1, numFieldNames);
                 for i = 1:numFieldNames
@@ -48,9 +48,9 @@ classdef DataInventory < matlab.mixin.Copyable
                 str = struct(arguments{:});
             end
         end
-             
+
         function append(obj, data)
-            startIdx = obj.lastAppenedIdx + 1;          
+            startIdx = obj.lastAppenedIdx + 1;
             obj.dynamicAllocation(data);
             if obj.dataNum ~= numel(data)
                 error("[Mismatched size] "+"Name :"+obj.fieldName{1} +" / Size of data: "+num2str(numel(obj.dataName))+" / Size of input: "+num2str(numel(data)))
@@ -62,12 +62,15 @@ classdef DataInventory < matlab.mixin.Copyable
                 obj.dataLen = 2*obj.lastAppenedIdx;
             end
         end
-        
+
         function dynamicAllocation(obj, data)
             if obj.dataNum == 0
                 obj.dataNum = numel(data);
                 obj.data = nan(numel(obj.indepVar), obj.dataNum);
-                obj.dataName = repmat("undef", 1, numel(data));
+                obj.dataName = strings(1, obj.dataNum);
+                for k = 1:obj.dataNum
+                    obj.dataName(k) = "undef_" + k;
+                end
             end
         end
 
@@ -160,7 +163,7 @@ classdef DataInventory < matlab.mixin.Copyable
             end
             axes = obj.axes;
         end
-        
+
         function [Axes, ps] = subplot(obj, fignum, axes_or_idx_1, axes_or_idx_2, varargin)
             default_axes = (obj.dataNum * 100 + 10 + 1):(obj.dataNum * 100 + 10 + obj.dataNum);
             default_idx = 1:1:obj.dataNum;
@@ -275,7 +278,7 @@ classdef DataInventory < matlab.mixin.Copyable
                     if isempty(obj.dataName{k})
                         obj.dataName{k} = '';
                     end
-                    
+
                     ps{i} = plot(obj.indepVar(1:ndata), obj.data(:, k), varargin{:});
                 end
                 ylabel(obj.dataName{k});
@@ -309,11 +312,11 @@ classdef DataInventory < matlab.mixin.Copyable
             xlabel('Time [sec]');box on; grid on;
             ylabel(obj.fieldName);
             ndata = size(obj.data, 1);
-            for i = 1:length(idx)                
+            for i = 1:length(idx)
                 p{i} = plot(obj.indepVar(1:ndata), obj.data(:, idx(i)),'DisplayName', obj.dataName{idx(i)}, varargin{:});
-            end           
+            end
         end
-     
+
         function p = plot3(obj, fignum, order, varargin)
             if nargin < 2
                 figure('Color', 'white');
@@ -335,7 +338,7 @@ classdef DataInventory < matlab.mixin.Copyable
                 varargin = [{order}, varargin(:)'];
                 order = [1, 2, 3];
             end
-            
+
             % extract unitConverter from varargin
             [varargin, a2b] = obj.extractUnitConverter(varargin);
 
@@ -346,19 +349,19 @@ classdef DataInventory < matlab.mixin.Copyable
             xlabel(obj.dataName{order(1)});
             ylabel(obj.dataName{order(2)});
             zlabel(obj.dataName{order(3)})
-            grid on; box on; 
+            grid on; box on;
         end
-        
-        function erase(obj, idx) 
+
+        function erase(obj, idx)
             if isnan(idx)
                 obj.data(obj.lastAppenedIdx+1:end, :) = [];
                 return
             end
             obj.indepVar(idx) = [];
-            obj.data(idx, :) = []; 
+            obj.data(idx, :) = [];
             obj.dataLen = size(obj.data, 1);
-        end           
-        
+        end
+
         function str = saveobj(obj)
             str.fieldName = obj.fieldName;
             str.dataName = obj.dataName;
@@ -370,12 +373,12 @@ classdef DataInventory < matlab.mixin.Copyable
             str.interval = obj.interval;
             str.startval = obj.startval;
         end
-        
+
         function postProcessData(obj)
             len = obj.lastAppenedIdx;
             obj.data(len+1:end, :) = [];
         end
-        
+
         function [updatedCellArray, value] = extractUnitConverter(~, cellArray)
             bool = cellfun(@(x) isequal(x, "unitConverter"), cellArray);
             idx = find(bool==1, 1);
@@ -429,7 +432,7 @@ classdef DataInventory < matlab.mixin.Copyable
             end
         end
     end
-    
+
     methods (Static)
         function test()
             timeSpan = 0:0.1:10;
@@ -437,18 +440,18 @@ classdef DataInventory < matlab.mixin.Copyable
             fieldNames = {'aa'};
             dataNames = {'a1','a2'};
             aa = DataInventory(fieldNames, dataNames, timeSpan);
-            
+
             for i = 1:length(timeSpan)
-                adata = [sin(timeSpan(i)); cos(timeSpan(i))];               
+                adata = [sin(timeSpan(i)); cos(timeSpan(i))];
                 aa.save(adata, i);
             end
             aa.multiPlot(1, 'a'); hold on;
-            
+
             %% multiple data case
             fieldNames = {'aa','bb','cc'};
             dataNames = {{'a1','a2'},{'b1','b2'},{'c1','c2'}};
             [~, log] = DataInventory(fieldNames, dataNames, timeSpan);
-            
+
             for i = 1:length(timeSpan)
                 adata = [sin(timeSpan(i)); cos(timeSpan(i))];
                 bdata = 2*adata;
@@ -457,26 +460,26 @@ classdef DataInventory < matlab.mixin.Copyable
                 log.bb.save(bdata, i);
                 log.cc.save(cdata, i);
             end
-           
+
             log.aa.multiPlot(2, 'a'); hold on;
             log.bb.multiPlot(2, 'b');
             log.cc.multiPlot(2, 'c')
             log.aa.plot2(3);
         end
-        
+
         function str = obj2str(datastr)
             fieldNames = fieldnames(datastr);
             for i = 1:length(fieldNames)
                 object = datastr.(fieldNames{i});
                 dataStr = object.saveobj();
                 str.(fieldNames{i}) =  dataStr;
-            end            
+            end
         end
         function strs = correctName(str)
             fieldNames = fieldnames(str);
             nfield = length(fieldNames);
             for i = 1:nfield
-                fieldName = fieldNames{i}; 
+                fieldName = fieldNames{i};
                 strs.(fieldName).fieldName = fieldName;
                 strs.(fieldName).dataName = str.(fieldName).dataName;
                 strs.(fieldName).indepVar = str.(fieldName).indepVar;
@@ -507,9 +510,9 @@ classdef DataInventory < matlab.mixin.Copyable
                 objs.(fieldName).interval = str.(fieldName).interval;
                 objs.(fieldName).startval = str.(fieldName).startval;
             end
-            
-        end   
-             
+
+        end
+
         function str = addData(obj1, obj2, operator, fieldName, dataName)
             assert(obj1.dataNum == obj2.dataNum, 'the length of entered two data are not equal');
             if nargin == 3
@@ -519,8 +522,8 @@ classdef DataInventory < matlab.mixin.Copyable
             if nargin == 4
                 dataName = cell(obj1.dataNum, 1);
             end
-            
-            
+
+
             [~, str] = DataInventory(fieldName, dataName, obj1.indepVar);
             switch operator
                 case '+'
@@ -528,8 +531,8 @@ classdef DataInventory < matlab.mixin.Copyable
                 case '-'
                     str.(fieldName).append(obj1.data - obj2.data);
             end
-            
+
         end
-        
+
     end
 end
