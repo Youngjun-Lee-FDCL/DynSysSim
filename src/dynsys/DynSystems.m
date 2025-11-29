@@ -1,8 +1,8 @@
 classdef DynSystems < handle
-    properties   
+    properties
         name
         time = 0
-        state 
+        state
         data
     end
 
@@ -11,7 +11,7 @@ classdef DynSystems < handle
         stateSize
         subSysCell
         subSysNum = 0
-        subSysSize 
+        subSysSize
         subSysIdxes
         stateRestSize
         isLogOn = false
@@ -19,9 +19,9 @@ classdef DynSystems < handle
         holder = {}
         holderNum = 1
     end
-        
+
     methods
-        function obj = DynSystems(name, in, logOn, state_rest) 
+        function obj = DynSystems(name, in, logOn, state_rest)
             arguments
                 name
                 in
@@ -32,22 +32,22 @@ classdef DynSystems < handle
             obj.stateRestSize = numel(state_rest);
             obj.isLogOn = logOn;
             assert(or(iscell(in), isnumeric(in)), 'invalid input');
-            if iscell(in)              
+            if iscell(in)
                 obj.subSysCell = in;
-                obj.subSysNum = numel(in);  
+                obj.subSysNum = numel(in);
                 startIdx = 1;
                 for i = 1:obj.subSysNum
                     stSize = in{i}.stateSize;
                     obj.subSysSize(i) = stSize;
                     stateArr(startIdx:startIdx + stSize -1, 1) = in{i}.state;
                     startIdx = startIdx  + stSize;
-                end             
+                end
                 s = [stateArr; state_rest];
                 obj.updateState(s);
                 obj.stateSize = numel(s);
             else
                 s = [in; state_rest];
-                obj.updateState(s);   
+                obj.updateState(s);
                 obj.stateSize = numel(s);
             end
             obj.name = name;
@@ -77,8 +77,8 @@ classdef DynSystems < handle
 
         function s_next = step(obj, t, s, u, dt)
             obj.holder = cell(obj.holderNum, 1);
-            f = obj.setODEfun(u); 
-            
+            f = obj.setODEfun(u);
+
             obj.switchLogData(true);
             k1 = f(t, s) * dt;
             obj.switchLogData(false);
@@ -122,10 +122,10 @@ classdef DynSystems < handle
                 sysSize = obj.subSysSize(i);
                 obj.subSysCell{i}.updateState(state(startIdx:startIdx + sysSize - 1));
                 startIdx = startIdx + sysSize;
-            end            
+            end
             obj.state = state;
         end
-        
+
         function updateTimes(obj, t)
             obj.time = t;
             for i = 1:obj.subSysNum
@@ -170,7 +170,7 @@ classdef DynSystems < handle
             end
             out{end} = state(startIdx:end);
         end
-        
+
         function switchLogData(obj, bool)
             if obj.isLogOn == true
                 obj.logData = bool;
@@ -187,5 +187,31 @@ classdef DynSystems < handle
             out = false;
         end
 
+        function state = applyProcessNoise(obj, state_det, dt)
+            % state_det : deterministic next state (from RK4)
+            % state     : stochastic next state (with process noise)
+
+            startIdx = 1;
+            state = zeros(size(state_det));
+            for i = 1:obj.subSysNum
+                sysSize      = obj.subSysSize(i);
+                subSys       = obj.subSysCell{i};
+                subState_det = state_det(startIdx:startIdx + sysSize - 1);
+
+                % 각 sub-system에 대해 process noise 적용
+                subState = subSys.applyProcessNoise(subState_det, dt);
+
+                % 결과를 전체 state 벡터에 붙이기
+                state(startIdx:startIdx + sysSize - 1) = subState;
+                startIdx = startIdx + sysSize;
+            end
+            % Leaf 시스템: addProcessNoise를 override해서 사용
+            state = obj.addProcessNoise(state, dt);
+        end
+
+        function state = addProcessNoise(obj, state_det, dt)
+            % default function
+            state = state_det;
+        end
     end
 end

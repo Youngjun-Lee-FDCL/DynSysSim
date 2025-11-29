@@ -12,7 +12,7 @@ classdef Simulator < matlab.mixin.Copyable
         fieldNames
         tspan
     end
-  
+
     methods
         function obj = Simulator(system, psim)
             if nargin <= 1
@@ -20,7 +20,7 @@ classdef Simulator < matlab.mixin.Copyable
             else
                 obj.psim = psim;
             end
-            
+
             classes = superclasses(system);
             if ~strcmp(classes{end-1}, 'DynSystems')
                 error('invalid system')
@@ -35,11 +35,11 @@ classdef Simulator < matlab.mixin.Copyable
             if isempty(obj.system.state)
                 error('state should be initialized before calling propagate method');
             end
-     
+
             if isnumeric(u)
-               u = @(t) u; 
+                u = @(t) u;
             end
-            
+
             % set a timer of the simulator
             obj.tspan = round(tspan, 6);
             numiter = length(tspan);
@@ -55,25 +55,26 @@ classdef Simulator < matlab.mixin.Copyable
             end
             dim_bools = size(f(obj.system.time, obj.system.state)) == size(obj.system.state);
             assert(and(dim_bools(1), dim_bools(2)), "Check the input/output of your dynEqns method: the sizes of state and its derivative does not match")
-            
+
             tic
             for i = 1:numiter
                 t = obj.system.time();
                 s = obj.system.state();
-                s_next = obj.system.step(t, s, u(t), dt);
-                t_next = round(t + dt ,6);  
+                s_next_det = obj.system.step(t, s, u(t), dt);
+                t_next = round(t + dt ,6);
                 obj.stackdata();
+                s_next = obj.system.applyProcessNoise(s_next_det, dt); 
                 obj.system.updateState(s_next);
                 obj.system.updateTimes(t_next);
                 if obj.system.stopConds(t_next, s_next)
                     break;
                 end
             end
-            obj.elapsedTime = toc;                    
-            if obj.INIT 
+            obj.elapsedTime = toc;
+            if obj.INIT
                 obj.INIT = false;
             end
-            
+
             % post processing log (DataInventory)
             fnames = fields(obj.log);
             for k = 1:length(fnames)
@@ -83,29 +84,30 @@ classdef Simulator < matlab.mixin.Copyable
                 obj.log = DataInventory.obj2str(obj.log);
             end
         end
-        
+
 
         function [obj, log] = propagate_parallel(obj, tspan, u)
             if isempty(obj.system.state)
                 error('state should be initialized before calling propagate method');
             end
             if isnumeric(u)
-               u = @(t) u; 
+                u = @(t) u;
             end
 
             obj.tspan = round(tspan, 6);
             numiter = length(tspan);
             dt = tspan(2) - tspan(1);
             obj.system.updateTimes(tspan(1));
-            
+
             obj.log = DataInventory.str2obj(obj.log);
             tic
             for i = 1:numiter
                 t = obj.system.time();
                 s = obj.system.state();
-                s_next = obj.system.step(t, s, u(t), dt);
-                t_next = round(t + dt ,6);  
+                s_next_det = obj.system.step(t, s, u(t), dt);
+                t_next = round(t + dt ,6);
                 obj.stackdata_parallel();
+                s_next = obj.system.applyProcessNoise(s_next_det, dt); 
                 obj.system.updateState(s_next);
                 obj.system.updateTimes(t_next);
                 if obj.system.stopConds(t_next, s_next)
@@ -113,7 +115,7 @@ classdef Simulator < matlab.mixin.Copyable
                 end
             end
             obj.elapsedTime = toc;
-            if obj.INIT 
+            if obj.INIT
                 obj.INIT = false;
             end
             log = DataInventory.obj2str(obj.log);
@@ -141,7 +143,7 @@ classdef Simulator < matlab.mixin.Copyable
                 end
             end
         end
-        
+
         function stackdata_parallel(obj)
             data = obj.system.data;
             fnames = fieldnames(data);
@@ -149,11 +151,11 @@ classdef Simulator < matlab.mixin.Copyable
                 obj.log.(fnames{i}).append(data.(fnames{i}));
             end
         end
-        
+
         function report(obj)
             fprintf('[%s] Elapsed simulation time: %.2f seconds \n',obj.system.name, obj.elapsedTime)
         end
-        
+
         function f = set_f(obj, u)
             if nargin == 1
                 f = @(t, s) obj.system.stateSpaceEqn(t, s);
@@ -171,5 +173,5 @@ classdef Simulator < matlab.mixin.Copyable
                 out{i} = obj.log.(obj.fieldNames{i}).copy();
             end
         end
-    end                
+    end
 end

@@ -59,10 +59,9 @@ classdef NonlinearSecondOrderSystem < SecondOrderSystem
             % Plots
             log.cmd.plot(1); hold on;
             log.state.plot(1, 1);
-%             plot(sim.tspan, traj,"--")
             plot(tspan, sys.xLim*ones(length(tspan),1), "--k");
             plot(tspan, -sys.xLim*ones(length(tspan),1), "--k");
-            legend("Command","Ours");%,"Analytic solutions")
+            legend("Command","Actual signal");
             
             log.state.plot(2, 2); hold on;
             plot(tspan, sys.xDotLim*ones(length(tspan),1), "--k");
@@ -74,6 +73,7 @@ classdef NonlinearSecondOrderSystem < SecondOrderSystem
             rmpath("../solvers/")
             rmpath("../datalogger/")
         end
+
         function out = sat(x, lim)
             out = min(max(x, -lim),lim);
         end
